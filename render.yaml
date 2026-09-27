@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: kalibrovka-bot
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python bot.py
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: ADMIN_ID
+        value: "426544545"
+      - key: WEB_APP_URL
+        value: https://kalibrovka-3d.surge.sh
+      - key: PORT
+        value: "8000"
+      - key: BOT_TOKEN
+        sync: false
