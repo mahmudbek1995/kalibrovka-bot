@@ -295,6 +295,8 @@ async def start_handler(message: types.Message):
     web_status = f"\n🌐 <b>Veb-Ilova:</b> <a href='{web_url}'>{web_url}</a>\n" if web_url else ""
 
     welcome_text = (
+        f"🔬 <b>M.I.R Laboratories</b> — 3D Kalibrovka Tizimi\n"
+        f"━━━━━━━━━━━━━━━━━━━━\n"
         f"Assalomu alaykum, <b>{message.from_user.first_name}</b>! 👋\n\n"
         f"Ushbu bot <b>3D printer, stanok yoki har qanday o'qlarni (X, Y, Z)</b> "
         f"bitta o'lchangan natija asosida tezkor kalibrovka qilish uchun mo'ljallangan.{web_status}\n"
@@ -304,7 +306,8 @@ async def start_handler(message: types.Message):
         f"Bot darhol <b>modelni necha foizga qo'yish kerakligini</b> yoki <b>yangi qadamni (Steps/mm)</b> hisoblab beradi!\n\n"
         f"⚡ <b>Tezkor usul:</b> Botga shunchaki ikkita raqam yuboring:\n"
         f"👉 <code>50 48.5</code> <i>(Kutilgan 50mm, chiqqani 48.5mm)</i>\n"
-        f"👉 <code>20 19.8</code> <i>(Kutilgan 20mm, chiqqani 19.8mm)"
+        f"👉 <code>20 19.8</code> <i>(Kutilgan 20mm, chiqqani 19.8mm)</i>\n\n"
+        f"🏛 <i>Mualliflik:</i> <b>M.I.R Laboratories</b>"
     )
     await message.answer(welcome_text, reply_markup=get_reply_keyboard(), parse_mode="HTML")
     await message.answer("👇 <b>Quyidagi menyu orqali boshlashingiz mumkin:</b>", reply_markup=get_main_keyboard(), parse_mode="HTML")

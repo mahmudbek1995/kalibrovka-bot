@@ -6,3 +6,6 @@ cloudflared.exe
 public/
 *.key
 *.pub
+deploy_render.py
+koyeb_bin/
+list_windows.py
