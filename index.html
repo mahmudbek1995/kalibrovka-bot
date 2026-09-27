@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Kalibrovka Bot & Kalkulyator | X, Y, Z O'qlari Tahlili</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: rgba(22, 30, 49, 0.85);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent-x: #3b82f6;
+      --accent-x-glow: rgba(59, 130, 246, 0.3);
+      --accent-y: #10b981;
+      --accent-y-glow: rgba(16, 185, 129, 0.3);
+      --accent-z: #f59e0b;
+      --accent-z-glow: rgba(245, 158, 11, 0.3);
+      --accent-scale: #f43f5e;
+      --accent-scale-glow: rgba(244, 63, 94, 0.3);
+      --accent-primary: #6366f1;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --radius: 16px;
+      --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.1) 0%, transparent 45%),
+        linear-gradient(180deg, #0b0f19 0%, #080b12 100%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* HEADER */
+    header {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(16px);
+      padding: 24px;
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-scale), var(--accent-x), var(--accent-y), var(--accent-z), var(--accent-primary));
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #4f46e5, #06b6d4);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+    }
+
+    .brand-text h1 {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(90deg, #fff, #cbd5e1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-text p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .badge-tg {
+      background: rgba(36, 161, 222, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* PRESETS */
+    .presets-bar {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .preset-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: var(--transition);
+    }
+
+    .preset-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* NAVIGATION TABS */
+    .nav-tabs {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      background: rgba(15, 23, 42, 0.8);
+      padding: 6px;
+      border-radius: 14px;
+      border: 1px solid var(--card-border);
+      gap: 6px;
+    }
+
+    @media (max-width: 768px) {
+      .nav-tabs {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: var(--transition);
+    }
+
+    .tab-btn.active {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .tab-btn[data-tab="all"].active { border-bottom: 2px solid var(--accent-primary); }
+    .tab-btn[data-tab="scale"].active { color: var(--accent-scale); border-bottom: 2px solid var(--accent-scale); }
+    .tab-btn[data-tab="x"].active { color: var(--accent-x); border-bottom: 2px solid var(--accent-x); }
+    .tab-btn[data-tab="y"].active { color: var(--accent-y); border-bottom: 2px solid var(--accent-y); }
+    .tab-btn[data-tab="z"].active { color: var(--accent-z); border-bottom: 2px solid var(--accent-z); }
+
+    /* CARD STYLES */
+    .axis-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(14px);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+      transition: var(--transition);
+    }
+
+    .axis-card:hover {
+      border-color: rgba(255, 255, 255, 0.16);
+    }
+
+    .axis-card.axis-scale {
+      border-top: 3px solid var(--accent-scale);
+      background: linear-gradient(180deg, rgba(244, 63, 94, 0.06) 0%, rgba(22, 30, 49, 0.9) 100%);
+    }
+    .axis-card.axis-x { border-top: 3px solid var(--accent-x); }
+    .axis-card.axis-y { border-top: 3px solid var(--accent-y); }
+    .axis-card.axis-z { border-top: 3px solid var(--accent-z); }
+
+    .axis-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .axis-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .axis-badge {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 15px;
+    }
+
+    .axis-scale .axis-badge { background: var(--accent-scale-glow); color: var(--accent-scale); }
+    .axis-x .axis-badge { background: var(--accent-x-glow); color: var(--accent-x); }
+    .axis-y .axis-badge { background: var(--accent-y-glow); color: var(--accent-y); }
+    .axis-z .axis-badge { background: var(--accent-z-glow); color: var(--accent-z); }
+
+    .axes-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 860px) {
+      .axes-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .input-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .input-group label span.unit {
+      color: #64748b;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-wrapper input {
+      width: 100%;
+      background: rgba(11, 15, 25, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 11px 14px;
+      color: #fff;
+      font-size: 15px;
+      font-family: 'JetBrains Mono', monospace;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .input-wrapper input:focus {
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    /* RESULT MINI BOX */
+    .result-box {
+      background: rgba(11, 15, 25, 0.85);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .res-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .res-label {
+      color: var(--text-muted);
+    }
+
+    .res-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .res-highlight {
+      background: rgba(255, 255, 255, 0.04);
+      padding: 12px;
+      border-radius: 8px;
+      border-left: 3px solid var(--accent-primary);
+    }
+
+    .axis-scale .res-highlight { border-left-color: var(--accent-scale); background: rgba(244, 63, 94, 0.08); }
+    .axis-x .res-highlight { border-left-color: var(--accent-x); }
+    .axis-y .res-highlight { border-left-color: var(--accent-y); }
+    .axis-z .res-highlight { border-left-color: var(--accent-z); }
+
+    .res-highlight .res-main-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .res-highlight .res-main-val {
+      font-size: 22px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      color: #fff;
+      margin-top: 2px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .status-ok { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+    .status-warn { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+    .status-err { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+
+    /* COMPREHENSIVE ANALYSIS SECTION */
+    .analysis-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(16px);
+      border-radius: var(--radius);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .analysis-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    @media (max-width: 768px) {
+      .analysis-summary-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .stat-tile {
+      background: rgba(11, 15, 25, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .stat-tile .title {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .stat-tile .number {
+      font-size: 20px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .stat-tile .sub {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* 3D VISUALIZER & CUBE */
+    .visualizer-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(16px);
+      border-radius: var(--radius);
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: center;
+    }
+
+    @media (max-width: 768px) {
+      .visualizer-card {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .cube-stage {
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      perspective: 800px;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+      border-radius: 12px;
+      border: 1px dashed rgba(255, 255, 255, 0.08);
+    }
+
+    .cube-3d {
+      width: 90px;
+      height: 90px;
+      position: relative;
+      transform-style: preserve-3d;
+      transform: rotateX(-20deg) rotateY(35deg);
+      transition: transform 0.4s ease;
+      animation: spinSlow 16s infinite linear;
+    }
+
+    @keyframes spinSlow {
+      0% { transform: rotateX(-20deg) rotateY(0deg); }
+      100% { transform: rotateX(-20deg) rotateY(360deg); }
+    }
+
+    .cube-face {
+      position: absolute;
+      width: 90px;
+      height: 90px;
+      background: rgba(99, 102, 241, 0.15);
+      border: 2px solid rgba(99, 102, 241, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 16px;
+      color: #fff;
+      backdrop-filter: blur(4px);
+    }
+
+    .cube-face.front  { transform: translateZ(45px); border-color: var(--accent-x); background: rgba(59, 130, 246, 0.15); }
+    .cube-face.back   { transform: rotateY(180deg) translateZ(45px); }
+    .cube-face.right  { transform: rotateY(90deg) translateZ(45px); border-color: var(--accent-y); background: rgba(16, 185, 129, 0.15); }
+    .cube-face.left   { transform: rotateY(-90deg) translateZ(45px); }
+    .cube-face.top    { transform: rotateX(90deg) translateZ(45px); border-color: var(--accent-z); background: rgba(245, 158, 11, 0.15); }
+    .cube-face.bottom { transform: rotateX(-90deg) translateZ(45px); }
+
+    .vis-info {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .vis-info h4 {
+      font-size: 16px;
+      color: #fff;
+    }
+
+    .vis-info p {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .gcode-preview {
+      background: #050811;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #38bdf8;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .copy-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .copy-btn:hover {
+      background: var(--accent-primary);
+    }
+
+    /* BUTTONS */
+    .button-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      flex: 1;
+      min-width: 140px;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: var(--transition);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-primary), #4338ca);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      border: 1px solid var(--card-border);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    /* HISTORY TABLE */
+    .history-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th {
+      text-align: left;
+      padding: 10px 12px;
+      color: var(--text-muted);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      font-weight: 600;
+    }
+
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* FOOTER */
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: var(--text-muted);
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #1e293b;
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 30px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 9999;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- HEADER -->
+    <header>
+      <div class="header-top">
+        <div class="brand">
+          <div class="brand-icon">⚙️</div>
+          <div class="brand-text">
+            <h1>Kalibrovka Bot & Kalkulyator</h1>
+            <p>Bitta aniq o'lchov asosida tezkor proporsiya va qadamlar hisobi</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <span class="badge-tg" id="tgBadge">⚡ Telegram Tayyor</span>
+        </div>
+      </div>
+
+      <!-- PRESETS -->
+      <div class="presets-bar">
+        <span style="font-size: 12px; color: var(--text-muted); align-self: center; margin-right: 4px;">Misollar:</span>
+        <button class="preset-btn" onclick="applyPreset(20, 19.82, 80)">🎲 20mm Kubik</button>
+        <button class="preset-btn" onclick="applyPreset(100, 98.40, 100)">📏 100mm O'q harakati</button>
+        <button class="preset-btn" onclick="applyScalePreset(50, 48.50)">🎯 50mm Masshtab (Foiz)</button>
+        <button class="preset-btn" onclick="resetAll()">🔄 Tozalash</button>
+      </div>
+
+      <!-- TABS -->
+      <div class="nav-tabs">
+        <button class="tab-btn active" data-tab="all" onclick="setTab('all')">📊 Barcha o'qlar</button>
+        <button class="tab-btn" data-tab="scale" onclick="setTab('scale')">🎯 100% Masshtab & Foiz</button>
+        <button class="tab-btn" data-tab="x" onclick="setTab('x')">🔵 X O'qi</button>
+        <button class="tab-btn" data-tab="y" onclick="setTab('y')">🟢 Y O'qi</button>
+        <button class="tab-btn" data-tab="z" onclick="setTab('z')">🟡 Z O'qi</button>
+      </div>
+    </header>
+
+    <!-- 100% SCALE PERCENTAGE CARD -->
+    <div class="axis-card axis-scale" id="cardScale">
+      <div class="axis-header">
+        <div class="axis-title">
+          <div class="axis-badge">🎯</div>
+          <div>
+            <h3>100% da Chiqqan O'lchamdan Yangi Foizni Hisoblash</h3>
+            <small style="color: var(--text-muted); font-size: 11px;">Model kerakli razmerda chiqishi uchun uni necha foizga qo'yish kerakligini hisoblaydi</small>
+          </div>
+        </div>
+        <span class="badge-tg" style="border-color: rgba(244, 63, 94, 0.4); color: #fb7185; background: rgba(244, 63, 94, 0.1);">100% ➔ Yangi %</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+        <div class="input-group">
+          <label>Biz xohlagan (kutilgan) o'lcham <span class="unit">mm</span></label>
+          <div class="input-wrapper">
+            <input type="number" step="0.01" id="scale_target" value="50.00" oninput="calculateScale()">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>100% da chiqqan natija <span class="unit">mm</span></label>
+          <div class="input-wrapper">
+            <input type="number" step="0.01" id="scale_measured" value="48.50" placeholder="Haqiqatda chiqqan razmer" oninput="calculateScale()">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Hozirgi masshtab <span class="unit">%</span></label>
+          <div class="input-wrapper">
+            <input type="number" step="0.01" id="scale_current" value="100.00" oninput="calculateScale()">
+          </div>
+        </div>
+      </div>
+
+      <!-- RESULT BOX FOR SCALE -->
+      <div class="result-box">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; align-items: center;">
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div class="res-row">
+              <span class="res-label">Kutilgan o'lcham:</span>
+              <span class="res-val" id="scale_target_display">50.00 mm</span>
+            </div>
+            <div class="res-row">
+              <span class="res-label">O'lchangan natija:</span>
+              <span class="res-val" id="scale_measured_display">48.50 mm</span>
+            </div>
+            <div class="res-row">
+              <span class="res-label">Og'ish (Xatolik):</span>
+              <span class="res-val" id="scale_delta">-1.50 mm (-3.00%)</span>
+            </div>
+          </div>
+
+          <div class="res-highlight">
+            <div class="res-main-label" style="color: #fda4af;">KERAKLI YANGI MASSHTAB (FOIZ)</div>
+            <div class="res-main-val" id="scale_new_val" style="color: #fff; font-size: 26px;">103.09%</div>
+            <div style="font-size: 12px; color: #cbd5e1; margin-top: 4px;" id="scale_advice_text">
+              Model kichik chiqqan. Sliceda model masshtabini 100% dan <b>103.09%</b> ga oshiring (+3.09%).
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap;">
+          <button class="preset-btn" onclick="copyScaleResult()" style="background: rgba(244, 63, 94, 0.15); border-color: rgba(244, 63, 94, 0.3); color: #fff;">
+            📋 Yangi Foizni Nusxalash
+          </button>
+          <button class="preset-btn" onclick="applyScalePreset(100, 98.4)">
+            💡 100mm misoli
+          </button>
+          <button class="preset-btn" onclick="applyScalePreset(20, 20.3)">
+            💡 20mm (Katta chiqqan) misoli
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AXES INPUT & RESULT CARDS -->
+    <div class="axes-grid" id="axesGrid">
+      
+      <!-- X AXIS CARD -->
+      <div class="axis-card axis-x" id="cardX">
+        <div class="axis-header">
+          <div class="axis-title">
+            <div class="axis-badge">X</div>
+            <div>
+              <h3>X O'qi Kalibrovkasi</h3>
+              <small style="color: var(--text-muted); font-size: 11px;">Gorizontal harakat</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Kutilgan o'lcham <span class="unit">mm</span></label>
+          <div class="input-wrapper">
+            <input type="number" step="0.01" id="x_target" value="20.00" oninput="calculateAll()">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>O'lchangan natija <span class="unit">mm</span></label>
+          <div class="input-wrapper">
+            <input type="number" step="0.01" id="x_measured" value="19.82" placeholder="Chiqqan razmer" oninput="calculateAll()">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Hozirgi qadam <span class="unit">steps/mm</span></label>
+          <div class="input-wrapper">
+            <input type="number" step="0.01" id="x_current" value="80.00" oninput="calculateAll()">
+          </div>
+        </div>
+
+        <!-- RESULTS MINI BOX -->
+        <div class="result-box">
+          <div class="res-row">
+            <span class="res-label">Og'ish (Xatolik):</span>
+            <span class="res-val" id="x_delta">-0.18 mm (-0.90%)</span>
+          </div>
+          <div class="res-highlight">
+            <div class="res-main-label">Yangi Tavsiya Qilingan Qadam</div>
+            <div class="res-main-val" id="x_new_val">80.73</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;" id="x_prop_ratio">
+              Tuzatish koeffitsiyenti: 100.91%
+            </div>
+          </div>
+          <div class="res-row" style="margin-top: 4px;">
+            <span class="res-label">Holati:</span>
+            <span id="x_status" class="status-badge status-warn">⚠️ Kichrayish kuzatildi</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Y AXIS CARD -->
+      <div class="axis-card axis-y" id="cardY">
+        <div class="axis-header">
+          <div class="axis-title">
+            <div class="axis-badge">Y</div>
+            <div>
+              <h3>Y O'qi Kalibrovkasi</h3>
+              <small style="color: var(--text-muted); font-size: 11px;">Bo'ylama harakat</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Kutilgan o'lcham <span class="unit">mm</span></label>
+          <div class="input-wrapper">
+            <input type="number" step="0.01" id="y_target" value="20.00" oninput="calculateAll()">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>O'lchangan natija <span class="unit">mm</span></label>
+          <div class="input-wrapper">
+            <input type="number" step="0.01" id="y_measured" value="20.14" placeholder="Chiqqan razmer" oninput="calculateAll()">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Hozirgi qadam <span class="unit">steps/mm</span></label>
+          <div class="input-wrapper">
+            <input type="number" step="0.01" id="y_current" value="80.00" oninput="calculateAll()">
+          </div>
+        </div>
+
+        <!-- RESULTS MINI BOX -->
+        <div class="result-box">
+          <div class="res-row">
+            <span class="res-label">Og'ish (Xatolik):</span>
+            <span class="res-val" id="y_delta">+0.14 mm (+0.70%)</span>
+          </div>
+          <div class="res-highlight">
+            <div class="res-main-label">Yangi Tavsiya Qilingan Qadam</div>
+            <div class="res-main-val" id="y_new_val">79.44</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;" id="y_prop_ratio">
+              Tuzatish koeffitsiyenti: 99.30%
+            </div>
+          </div>
+          <div class="res-row" style="margin-top: 4px;">
+            <span class="res-label">Holati:</span>
+            <span id="y_status" class="status-badge status-warn">⚠️ Kengayish kuzatildi</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Z AXIS CARD -->
+      <div class="axis-card axis-z" id="cardZ">
+        <div class="axis-header">
+          <div class="axis-title">
+            <div class="axis-badge">Z</div>
+            <div>
+              <h3>Z O'qi Kalibrovkasi</h3>
+              <small style="color: var(--text-muted); font-size: 11px;">Vertikal balandlik</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Kutilgan o'lcham <span class="unit">mm</span></label>
+          <div class="input-wrapper">
+            <input type="number" step="0.01" id="z_target" value="20.00" oninput="calculateAll()">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>O'lchangan natija <span class="unit">mm</span></label>
+          <div class="input-wrapper">
+            <input type="number" step="0.01" id="z_measured" value="20.00" placeholder="Chiqqan razmer" oninput="calculateAll()">
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Hozirgi qadam <span class="unit">steps/mm</span></label>
+          <div class="input-wrapper">
+            <input type="number" step="0.01" id="z_current" value="400.00" oninput="calculateAll()">
+          </div>
+        </div>
+
+        <!-- RESULTS MINI BOX -->
+        <div class="result-box">
+          <div class="res-row">
+            <span class="res-label">Og'ish (Xatolik):</span>
+            <span class="res-val" id="z_delta">0.00 mm (0.00%)</span>
+          </div>
+          <div class="res-highlight">
+            <div class="res-main-label">Yangi Tavsiya Qilingan Qadam</div>
+            <div class="res-main-val" id="z_new_val">400.00</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;" id="z_prop_ratio">
+              Tuzatish koeffitsiyenti: 100.00%
+            </div>
+          </div>
+          <div class="res-row" style="margin-top: 4px;">
+            <span class="res-label">Holati:</span>
+            <span id="z_status" class="status-badge status-ok">✅ Mukammal aniqlik</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 3D VISUALIZER & G-CODE EXPORT -->
+    <div class="visualizer-card">
+      <div class="cube-stage">
+        <div class="cube-3d" id="cubeDemo">
+          <div class="cube-face front">X</div>
+          <div class="cube-face back">X'</div>
+          <div class="cube-face right">Y</div>
+          <div class="cube-face left">Y'</div>
+          <div class="cube-face top">Z</div>
+          <div class="cube-face bottom">Z'</div>
+        </div>
+      </div>
+      <div class="vis-info">
+        <h4>📐 3D O'qlar va G-Code Sozlamasi</h4>
+        <p>
+          Ushbu hisob-kitoblar asosida 3D printer yoki stanokning doimiy xotirasiga (EEPROM) yangi qadamlarni kiritishingiz mumkin:
+        </p>
+        <div class="gcode-preview">
+          <code id="gcodeText">M92 X80.73 Y79.44 Z400.00</code>
+          <button class="copy-btn" onclick="copyGcode()">Nusxa olish</button>
+        </div>
+        <p style="font-size: 12px; color: #64748b;">
+          💡 <em>M92</em> qadamlarni yangilaydi, <em>M500</em> esa xotiraga saqlaydi.
+        </p>
+      </div>
+    </div>
+
+    <!-- DETAILED SUMMARY ANALYSIS -->
+    <div class="analysis-card">
+      <div class="card-title">
+        <span>📈</span> Umumiy Kalibrovka Xulosasi
+      </div>
+
+      <div class="analysis-summary-grid">
+        <div class="stat-tile">
+          <span class="title">O'rtacha aniqlik darajasi</span>
+          <span class="number" id="overallAccuracy">99.5%</span>
+          <span class="sub" id="overallDeviationLabel">O'rtacha og'ish: ±0.11 mm</span>
+        </div>
+        <div class="stat-tile">
+          <span class="title">Tavsiya</span>
+          <span class="number" style="font-size: 15px; color: #38bdf8;" id="recommendationText">Qadamlarni yangilash lozim</span>
+          <span class="sub">M92 buyrug'i tayyor</span>
+        </div>
+        <div class="stat-tile">
+          <span class="title">Tezkor amal</span>
+          <span class="number" style="font-size: 14px; color: #34d399;">G-Code saqlash: M500</span>
+          <span class="sub">EEPROM xotirasiga yozish</span>
+        </div>
+      </div>
+
+      <div class="button-row">
+        <button class="btn btn-primary" onclick="saveToHistory()">💾 Natijalarni Saqlash</button>
+        <button class="btn btn-secondary" onclick="shareResult()">📤 Telegram / Ulashish</button>
+        <button class="btn btn-secondary" onclick="exportCSV()">📥 CSV Yuklab Olish</button>
+      </div>
+    </div>
+
+    <!-- CALIBRATION HISTORY -->
+    <div class="history-card">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="card-title" style="font-size: 16px;">
+          <span>🕒</span> Kalibrovkalar Tarixi
+        </div>
+        <button class="preset-btn" onclick="clearHistory()">Tozalash</button>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Vaqt</th>
+              <th>O'q / Turi</th>
+              <th>Kutilgan</th>
+              <th>O'lchangan</th>
+              <th>Eski qiymat</th>
+              <th>Yangi qiymat</th>
+              <th>Holat</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody">
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">
+                Hozircha saqlangan natijalar yo'q. "Natijalarni Saqlash" tugmasini bosing.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+      <p>⚡ <strong>Kalibrovka Bot & Veb-Kalkulyator</strong> — X, Y, Z o'lchovlarini aniq hisoblash tizimi</p>
+      <p>© 2026 Barcha huquqlar himoyalangan.</p>
+    </footer>
+
+  </div>
+
+  <div class="toast" id="toast">Xabar</div>
+
+  <script>
+    // Telegram Web App Initialization
+    let tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.expand();
+      if (tg.initDataUnsafe?.user) {
+        document.getElementById('tgBadge').innerText = '👤 ' + (tg.initDataUnsafe.user.first_name || 'Foydalanuvchi');
+      }
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.innerText = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    // Tab switcher
+    function setTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      const cardScale = document.getElementById('cardScale');
+      const cardX = document.getElementById('cardX');
+      const cardY = document.getElementById('cardY');
+      const cardZ = document.getElementById('cardZ');
+
+      if (tab === 'all') {
+        if (cardScale) cardScale.style.display = 'flex';
+        cardX.style.display = 'flex';
+        cardY.style.display = 'flex';
+        cardZ.style.display = 'flex';
+      } else if (tab === 'scale') {
+        if (cardScale) cardScale.style.display = 'flex';
+        cardX.style.display = 'none';
+        cardY.style.display = 'none';
+        cardZ.style.display = 'none';
+      } else if (tab === 'x') {
+        if (cardScale) cardScale.style.display = 'none';
+        cardX.style.display = 'flex';
+        cardY.style.display = 'none';
+        cardZ.style.display = 'none';
+      } else if (tab === 'y') {
+        if (cardScale) cardScale.style.display = 'none';
+        cardX.style.display = 'none';
+        cardY.style.display = 'flex';
+        cardZ.style.display = 'none';
+      } else if (tab === 'z') {
+        if (cardScale) cardScale.style.display = 'none';
+        cardX.style.display = 'none';
+        cardY.style.display = 'none';
+        cardZ.style.display = 'flex';
+      }
+    }
+
+    // 100% dan Yangi Foizni Hisoblash (Bitta o'lchov bilan)
+    function calculateScale() {
+      const target = parseFloat(document.getElementById('scale_target').value) || 50;
+      const measured = parseFloat(document.getElementById('scale_measured').value) || 0;
+      const current = parseFloat(document.getElementById('scale_current').value) || 100;
+
+      const delta = measured - target;
+      const percentDelta = (target > 0) ? (delta / target) * 100 : 0;
+      const newScale = measured > 0 ? current * (target / measured) : current;
+      const scaleChange = newScale - current;
+
+      document.getElementById('scale_target_display').innerText = target.toFixed(2) + ' mm';
+      document.getElementById('scale_measured_display').innerText = measured.toFixed(2) + ' mm';
+      
+      const signDelta = delta >= 0 ? '+' : '';
+      document.getElementById('scale_delta').innerText = `${signDelta}${delta.toFixed(2)} mm (${signDelta}${percentDelta.toFixed(2)}%)`;
+      document.getElementById('scale_new_val').innerText = newScale.toFixed(2) + '%';
+
+      let advice = '';
+      if (Math.abs(delta) <= 0.03) {
+        advice = `O'lcham mukammal aniq! Masshtabni ${current.toFixed(1)}% da qoldirishingiz mumkin.`;
+      } else if (delta < 0) {
+        advice = `Model kichik chiqqan (-${Math.abs(delta).toFixed(2)}mm). Sliceda model masshtabini ${current.toFixed(1)}% dan <b>${newScale.toFixed(2)}%</b> ga oshiring (+${Math.abs(scaleChange).toFixed(2)}%).`;
+      } else {
+        advice = `Model katta chiqqan (+${delta.toFixed(2)}mm). Sliceda model masshtabini ${current.toFixed(1)}% dan <b>${newScale.toFixed(2)}%</b> ga kamaytiring (-${Math.abs(scaleChange).toFixed(2)}%).`;
+      }
+      document.getElementById('scale_advice_text').innerHTML = advice;
+    }
+
+    function applyScalePreset(target, measured) {
+      document.getElementById('scale_target').value = target.toFixed(2);
+      document.getElementById('scale_measured').value = measured.toFixed(2);
+      document.getElementById('scale_current').value = '100.00';
+      calculateScale();
+      showToast('Misol yuklandi!');
+    }
+
+    function copyScaleResult() {
+      const val = document.getElementById('scale_new_val').innerText;
+      navigator.clipboard.writeText(val).then(() => {
+        showToast('Nusxa olindi: ' + val);
+      }).catch(() => {
+        showToast('Nusxa olindi: ' + val);
+      });
+    }
+
+    // Core Calculation Logic for a single axis (Bitta o'lchov bilan)
+    function computeAxis(target, measured, currentVal) {
+      const delta = measured - target;
+      const percentDelta = (target > 0) ? (delta / target) * 100 : 0;
+      
+      const correctionRatio = (measured > 0) ? (target / measured) : 1;
+      const correctionPercent = correctionRatio * 100;
+      const newVal = currentVal * correctionRatio;
+
+      let statusText = '';
+      let statusClass = 'status-ok';
+
+      if (Math.abs(delta) <= 0.03) {
+        statusText = '✅ Mukammal aniqlik';
+        statusClass = 'status-ok';
+      } else if (delta < -0.03) {
+        statusText = `⚠️ Kichrayish (-${Math.abs(delta).toFixed(2)}mm)`;
+        statusClass = 'status-warn';
+      } else {
+        statusText = `⚠️ Kengayish (+${delta.toFixed(2)}mm)`;
+        statusClass = 'status-warn';
+      }
+
+      return {
+        measured,
+        delta,
+        percentDelta,
+        correctionPercent,
+        newVal,
+        statusText,
+        statusClass
+      };
+    }
+
+    // Main calculation for all axes
+    function calculateAll() {
+      // X
+      const xt = parseFloat(document.getElementById('x_target').value) || 20;
+      const xm = parseFloat(document.getElementById('x_measured').value) || 0;
+      const xc = parseFloat(document.getElementById('x_current').value) || 80;
+      const resX = computeAxis(xt, xm, xc);
+
+      const signX = resX.delta >= 0 ? '+' : '';
+      document.getElementById('x_delta').innerText = `${signX}${resX.delta.toFixed(2)} mm (${signX}${resX.percentDelta.toFixed(2)}%)`;
+      document.getElementById('x_new_val').innerText = resX.newVal.toFixed(2);
+      document.getElementById('x_prop_ratio').innerText = `Tuzatish koeffitsiyenti: ${resX.correctionPercent.toFixed(2)}%`;
+      
+      const elStatusX = document.getElementById('x_status');
+      elStatusX.className = `status-badge ${resX.statusClass}`;
+      elStatusX.innerText = resX.statusText;
+
+      // Y
+      const yt = parseFloat(document.getElementById('y_target').value) || 20;
+      const ym = parseFloat(document.getElementById('y_measured').value) || 0;
+      const yc = parseFloat(document.getElementById('y_current').value) || 80;
+      const resY = computeAxis(yt, ym, yc);
+
+      const signY = resY.delta >= 0 ? '+' : '';
+      document.getElementById('y_delta').innerText = `${signY}${resY.delta.toFixed(2)} mm (${signY}${resY.percentDelta.toFixed(2)}%)`;
+      document.getElementById('y_new_val').innerText = resY.newVal.toFixed(2);
+      document.getElementById('y_prop_ratio').innerText = `Tuzatish koeffitsiyenti: ${resY.correctionPercent.toFixed(2)}%`;
+      
+      const elStatusY = document.getElementById('y_status');
+      elStatusY.className = `status-badge ${resY.statusClass}`;
+      elStatusY.innerText = resY.statusText;
+
+      // Z
+      const zt = parseFloat(document.getElementById('z_target').value) || 20;
+      const zm = parseFloat(document.getElementById('z_measured').value) || 0;
+      const zc = parseFloat(document.getElementById('z_current').value) || 400;
+      const resZ = computeAxis(zt, zm, zc);
+
+      const signZ = resZ.delta >= 0 ? '+' : '';
+      document.getElementById('z_delta').innerText = `${signZ}${resZ.delta.toFixed(2)} mm (${signZ}${resZ.percentDelta.toFixed(2)}%)`;
+      document.getElementById('z_new_val').innerText = resZ.newVal.toFixed(2);
+      document.getElementById('z_prop_ratio').innerText = `Tuzatish koeffitsiyenti: ${resZ.correctionPercent.toFixed(2)}%`;
+      
+      const elStatusZ = document.getElementById('z_status');
+      elStatusZ.className = `status-badge ${resZ.statusClass}`;
+      elStatusZ.innerText = resZ.statusText;
+
+      // Update G-code preview
+      const gcode = `M92 X${resX.newVal.toFixed(2)} Y${resY.newVal.toFixed(2)} Z${resZ.newVal.toFixed(2)}`;
+      document.getElementById('gcodeText').innerText = gcode;
+
+      // Overall Summary
+      const avgError = (Math.abs(resX.percentDelta) + Math.abs(resY.percentDelta) + Math.abs(resZ.percentDelta)) / 3;
+      const overallAcc = Math.max(0, 100 - avgError).toFixed(1);
+      document.getElementById('overallAccuracy').innerText = overallAcc + '%';
+
+      const avgDeltaMm = ((Math.abs(resX.delta) + Math.abs(resY.delta) + Math.abs(resZ.delta)) / 3).toFixed(2);
+      document.getElementById('overallDeviationLabel').innerText = `O'rtacha og'ish: ±${avgDeltaMm} mm`;
+
+      let rec = 'Barcha o\'qlar me\'yorda';
+      if (Math.abs(resX.delta) > 0.05 || Math.abs(resY.delta) > 0.05 || Math.abs(resZ.delta) > 0.05) {
+        rec = 'Qadamlarni yangilash lozim (M92)';
+      }
+      document.getElementById('recommendationText').innerText = rec;
+
+      // 3D Cube deformation
+      const cube = document.getElementById('cubeDemo');
+      if (cube) {
+        const sx = Math.min(1.3, Math.max(0.7, xm / xt));
+        const sy = Math.min(1.3, Math.max(0.7, ym / yt));
+        const sz = Math.min(1.3, Math.max(0.7, zm / zt));
+        cube.style.transform = `rotateX(-20deg) rotateY(35deg) scale3d(${sx}, ${sy}, ${sz})`;
+      }
+    }
+
+    // Apply Presets
+    function applyPreset(target, measured, step) {
+      ['x', 'y'].forEach(axis => {
+        document.getElementById(`${axis}_target`).value = target.toFixed(2);
+        document.getElementById(`${axis}_measured`).value = measured.toFixed(2);
+        document.getElementById(`${axis}_current`).value = step.toFixed(2);
+      });
+      // Z axis
+      document.getElementById('z_target').value = target.toFixed(2);
+      document.getElementById('z_measured').value = target.toFixed(2);
+      document.getElementById('z_current').value = (step * 4).toFixed(2);
+
+      calculateAll();
+      showToast('Misol yuklandi!');
+    }
+
+    function resetAll() {
+      ['x', 'y', 'z'].forEach(axis => {
+        document.getElementById(`${axis}_target`).value = '20.00';
+        document.getElementById(`${axis}_measured`).value = '';
+        document.getElementById(`${axis}_current`).value = (axis === 'z' ? '400.00' : '80.00');
+      });
+      document.getElementById('scale_target').value = '50.00';
+      document.getElementById('scale_measured').value = '';
+      document.getElementById('scale_current').value = '100.00';
+      calculateAll();
+      calculateScale();
+      showToast('Tozalandi');
+    }
+
+    // Copy G-code
+    function copyGcode() {
+      const text = document.getElementById('gcodeText').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('G-Code nusxalandi: ' + text);
+      }).catch(() => {
+        showToast('Nusxa olindi');
+      });
+    }
+
+    // History Storage
+    function getHistory() {
+      try {
+        return JSON.parse(localStorage.getItem('calib_history') || '[]');
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function renderHistory() {
+      const history = getHistory();
+      const tbody = document.getElementById('historyBody');
+      if (history.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">Hozircha saqlangan natijalar yo'q.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = history.slice(-8).reverse().map(item => `
+        <tr>
+          <td style="color: var(--text-muted);">${item.time}</td>
+          <td style="font-weight: bold; color: ${item.axis === 'X' ? 'var(--accent-x)' : item.axis === 'Y' ? 'var(--accent-y)' : item.axis === 'Z' ? 'var(--accent-z)' : 'var(--accent-scale)'}">${item.axis}</td>
+          <td>${item.target} mm</td>
+          <td>${item.measured} mm</td>
+          <td>${item.oldVal}</td>
+          <td style="font-weight: bold; color: #fff;">${item.newVal}</td>
+          <td><span class="status-badge ${item.statusClass}">${item.statusText}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    function saveToHistory() {
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const history = getHistory();
+
+      ['x', 'y', 'z'].forEach(axis => {
+        const target = document.getElementById(`${axis}_target`).value;
+        const measured = document.getElementById(`${axis}_measured`).value;
+        const oldVal = document.getElementById(`${axis}_current`).value;
+        const newVal = document.getElementById(`${axis}_new_val`).innerText;
+        const statusEl = document.getElementById(`${axis}_status`);
+
+        if (measured) {
+          history.push({
+            time: timeStr,
+            axis: axis.toUpperCase(),
+            target,
+            measured,
+            oldVal,
+            newVal,
+            statusText: statusEl.innerText.trim(),
+            statusClass: statusEl.className.includes('status-ok') ? 'status-ok' : 'status-warn'
+          });
+        }
+      });
+
+      // Also save Scale if filled
+      const scaleM = document.getElementById('scale_measured').value;
+      if (scaleM) {
+        history.push({
+          time: timeStr,
+          axis: 'MASSHTAB',
+          target: document.getElementById('scale_target').value,
+          measured: scaleM,
+          oldVal: document.getElementById('scale_current').value + '%',
+          newVal: document.getElementById('scale_new_val').innerText,
+          statusText: 'Foiz hisoblandi',
+          statusClass: 'status-ok'
+        });
+      }
+
+      localStorage.setItem('calib_history', JSON.stringify(history));
+      renderHistory();
+      showToast('Natijalar tarixga saqlandi!');
+    }
+
+    function clearHistory() {
+      localStorage.removeItem('calib_history');
+      renderHistory();
+      showToast('Tarix tozalandi');
+    }
+
+    function exportCSV() {
+      const history = getHistory();
+      if (history.length === 0) {
+        showToast('Eksport qilish uchun avval natijalarni saqlang');
+        return;
+      }
+
+      let csv = 'Vaqt,Oq,Kutilgan(mm),Olchangan(mm),Eski_Qiymat,Yangi_Qiymat,Holat\n';
+      history.forEach(r => {
+        csv += `"${r.time}","${r.axis}","${r.target}","${r.measured}","${r.oldVal}","${r.newVal}","${r.statusText}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Kalibrovka_Natijalari_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('CSV fayli yuklab olindi!');
+    }
+
+    function shareResult() {
+      const gcode = document.getElementById('gcodeText').innerText;
+      const xNew = document.getElementById('x_new_val').innerText;
+      const yNew = document.getElementById('y_new_val').innerText;
+      const zNew = document.getElementById('z_new_val').innerText;
+      const scaleNew = document.getElementById('scale_new_val').innerText;
+
+      const report = `📊 KALIBROVKA NATIJALARI:\n` +
+        `🎯 Yangi Masshtab: ${scaleNew}\n` +
+        `🔵 X o'qi: ${xNew}\n` +
+        `🟢 Y o'qi: ${yNew}\n` +
+        `🟡 Z o'qi: ${zNew}\n` +
+        `⚙️ G-Code: ${gcode}\nM500 (Saqlash)`;
+
+      let sentViaTg = false;
+      if (tg && tg.sendData) {
+        try {
+          tg.sendData(JSON.stringify({
+            x: xNew,
+            y: yNew,
+            z: zNew,
+            scale: scaleNew,
+            gcode: gcode
+          }));
+          sentViaTg = true;
+          showToast('Telegram botga yuborildi! ✅');
+        } catch (e) {
+          console.warn('sendData faqat reply keyboarddan ochilganda ishlaydi:', e);
+        }
+      }
+
+      if (!sentViaTg) {
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(report).then(() => {
+            showToast('Natijalar xotiraga nusxalandi! 📋');
+          }).catch(() => {
+            showToast('Natijalar tayyor!');
+          });
+        } else if (navigator.share) {
+          navigator.share({
+            title: 'Kalibrovka Natijalari',
+            text: report
+          }).catch(() => {});
+        } else {
+          showToast('Natijalar tayyor!');
+        }
+      }
+    }
+
+    // Initialize on load
+    window.addEventListener('DOMContentLoaded', () => {
+      calculateScale();
+      calculateAll();
+      renderHistory();
+    });
+  </script>
+</body>
+</html>
